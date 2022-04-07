@@ -22,32 +22,54 @@ public class Reservation  {
 
     @PostPersist
     public void onPostPersist(){
-        ReservationCreated reservationCreated = new ReservationCreated();
-        BeanUtils.copyProperties(this, reservationCreated);
-        reservationCreated.publishAfterCommit();
-
-        //Following code causes dependency to external APIs
-        // it is NOT A GOOD PRACTICE. instead, Event-Policy mapping is recommended.
-
+        // 예약 요청이 들어왔을 경우 사용가능한지 확인
         socar.external.Car car = new socar.external.Car();
         // mappings goes here
-        ReservationApplication.applicationContext.getBean(socar.external.CarService.class)
+        boolean result = ReservationApplication.applicationContext.getBean(socar.external.CarService.class)
             .chkAndReqReserve(car);
+        System.out.println("사용가능 여부 : " + result);
 
+        if(result) { 
+
+            // 예약 가능한 상태인 경우(Available)
+            // PAYMENT 결제모듈 호출 (POST방식) - SYNC 호출
+            socar.external.Payment payment = new socar.external.Payment();
+            payment.setRsvId(this.getRsvId());
+            payment.setCarId(this.getCarId());
+            payment.setStatus("paid");
+            ReservationApplication.applicationContext.getBean(socar.external.PaymentService.class)
+                .approvePayment(payment);
+
+            // 이벤트시작 --> ReservationCreated
+            ReservationCreated reservationCreated = new ReservationCreated();
+            BeanUtils.copyProperties(this, reservationCreated);
+            reservationCreated.publishAfterCommit();
+        }
     }
+
     @PostUpdate
     public void onPostUpdate(){
-        ReservationCancelRequested reservationCancelRequested = new ReservationCancelRequested();
-        BeanUtils.copyProperties(this, reservationCancelRequested);
-        reservationCancelRequested.publishAfterCommit();
 
-        ReservationConfirmed reservationConfirmed = new ReservationConfirmed();
-        BeanUtils.copyProperties(this, reservationConfirmed);
-        reservationConfirmed.publishAfterCommit();
+        // 예약 취소 요청일 경우 
+        if(this.getStatus().equals("reservationCancelRequested")) {
+            ReservationCancelRequested reservationCancelRequested = new ReservationCancelRequested();
+            BeanUtils.copyProperties(this, reservationCancelRequested);
+            reservationCancelRequested.publishAfterCommit();
+        }
 
-        ReservationCancelled reservationCancelled = new ReservationCancelled();
-        BeanUtils.copyProperties(this, reservationCancelled);
-        reservationCancelled.publishAfterCommit();
+        // 예약 확정일 경우 
+        if(this.getStatus().equals("reservationConfirmed")) {
+            ReservationConfirmed reservationConfirmed = new ReservationConfirmed();
+            BeanUtils.copyProperties(this, reservationConfirmed);
+            reservationConfirmed.publishAfterCommit();
+        }
+
+        // 예약 취소일 경우 
+        if(this.getStatus().equals("reservationCancelled")) {
+            ReservationCancelled reservationCancelled = new ReservationCancelled();
+            BeanUtils.copyProperties(this, reservationCancelled);
+            reservationCancelled.publishAfterCommit();
+        }
 
     }
     @PrePersist
