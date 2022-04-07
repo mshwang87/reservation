@@ -14,7 +14,7 @@ spring:
     stream:
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: my-kafka.default.svc.cluster.local:9092
         streams:
           binder:
             configuration:
@@ -38,15 +38,36 @@ logging:
     org.springframework.cloud: debug
 server:
   port: 8083
+
+
+feign:
+  hystrix:
+    enabled: true
+
+hystrix:
+  command: 
+    #전역설정
+      default:
+        execution.isolation.thread.timeoutInMilliseconds: 10000
 ---
 
 spring:
+  application:
+    name: reservation
   profiles: docker
+  sleuth:
+    propagation-keys: x-request-id,x-ot-span-context
+    propagation:
+      type: B3,W3C
+  opentracing:
+    enabled: true
+  zipkin:
+    base-url: http://zipkin.istio-system:9411
   cloud:
     stream:
       kafka:
         binder:
-          brokers: my-kafka:9092
+          brokers: my-kafka.default.svc.cluster.local:9092
         streams:
           binder:
             configuration:
