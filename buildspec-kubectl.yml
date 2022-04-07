@@ -73,7 +73,7 @@ phases:
               spec:
                 containers:
                   - name: $_PROJECT_NAME
-                    image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$_PROJECT_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+                    image: 979050235289.dkr.ecr.ap-southeast-2.amazonaws.com/user06-reservation:1.0
                     ports:
                       - containerPort: 8080
                     readinessProbe:

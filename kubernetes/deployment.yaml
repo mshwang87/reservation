@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reservation
+  namespace: socar
   labels:
     app: reservation
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: reservation
-          image: username/reservation:latest
+          image: 979050235289.dkr.ecr.ap-southeast-2.amazonaws.com/user06-reservation:1.0
           ports:
             - containerPort: 8080
           readinessProbe:
