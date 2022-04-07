@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.util.Date;
 
-@FeignClient(name="car", url="http://car:8080")
+@FeignClient(name="car", url="http://user06-car:8080")
 public interface CarService {
     @RequestMapping(method= RequestMethod.GET, path="/cars")
     public void chkAndReqReserve(@RequestBody Car car);
