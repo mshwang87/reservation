@@ -20,27 +20,30 @@ public class Reservation  {
     @PostPersist
     public void onPostPersist(){
 
-        // 예약 요청이 들어왔을 경우 사용가능한지 확인
-        // mappings goes here
-        boolean result = ReservationApplication.applicationContext.getBean(socar.external.CarService.class)
-            .chkAndReqReserve(this.getCarId());
-        System.out.println("사용가능 여부 : " + result);
+        System.out.println("reqReserve");
+        if(this.getStatus().equals("reqReserve")) {
+            // 예약 요청이 들어왔을 경우 사용가능한지 확인
+            // mappings goes here
+            boolean result = ReservationApplication.applicationContext.getBean(socar.external.CarService.class)
+                .chkAndReqReserve(this.getCarId());
+            System.out.println("사용가능 여부 : " + result);
 
-        if(result) { 
+            if(result) { 
 
-            // 예약 가능한 상태인 경우(Available)
-            // PAYMENT 결제모듈 호출 (POST방식) - SYNC 호출
-            socar.external.Payment payment = new socar.external.Payment();
-            payment.setRsvId(this.getRsvId());
-            payment.setCarId(this.getCarId());
-            payment.setStatus("paid");
-            ReservationApplication.applicationContext.getBean(socar.external.PaymentService.class)
-                .approvePayment(payment);
+                // 예약 가능한 상태인 경우(Available)
+                // PAYMENT 결제모듈 호출 (POST방식) - SYNC 호출
+                socar.external.Payment payment = new socar.external.Payment();
+                payment.setRsvId(this.getRsvId());
+                payment.setCarId(this.getCarId());
+                payment.setStatus("paid");
+                ReservationApplication.applicationContext.getBean(socar.external.PaymentService.class)
+                    .approvePayment(payment);
 
-            // 이벤트시작 --> ReservationCreated
-            ReservationCreated reservationCreated = new ReservationCreated();
-            BeanUtils.copyProperties(this, reservationCreated);
-            reservationCreated.publishAfterCommit();
+                // 이벤트시작 --> ReservationCreated
+                ReservationCreated reservationCreated = new ReservationCreated();
+                BeanUtils.copyProperties(this, reservationCreated);
+                reservationCreated.publishAfterCommit();
+            }
         }
     }
 
