@@ -1,6 +1,9 @@
 package socar;
 
 import socar.config.kafka.KafkaProcessor;
+
+import java.util.Optional;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +26,14 @@ public class PolicyHandler{
         System.out.println("\n\n##### 예약 확인 : " + paymentApproved.toJson() + "\n\n");
 
 
-        
+            // 결제 완료 시 -> Status -> reserved
+            ///////////////////////////////////////
+            System.out.println("##### listener ConfirmReserve : " + paymentApproved.toJson());
 
-        // Sample Logic //
-        // Reservation reservation = new Reservation();
-        // reservationRepository.save(reservation);
+            long rsvId = paymentApproved.getRsvId(); // 결제 완료된 rsvId
+            long payId = paymentApproved.getPayId(); // 결제된 payId -> 나중에 취소할때 쓰임
+
+            updateResvationStatus(rsvId, "reserved", payId); // Status Update
 
     }
 
@@ -38,15 +44,33 @@ public class PolicyHandler{
 
         System.out.println("\n\n##### 예약 취소 : " + paymentCancelled.toJson() + "\n\n");
 
+        long rsvId = paymentCancelled.getRsvId(); // 취소된 rsvId
+        long payId = paymentCancelled.getPayId(); // 결제된 payId -> 나중에 취소할때 쓰임
 
-        
-
-        // Sample Logic //
-        // Reservation reservation = new Reservation();
-        // reservationRepository.save(reservation);
+        updateResvationStatus(rsvId, "cancelled", payId ); // Status Update
 
     }
 
+    private void updateResvationStatus(long rsvId, String status, long payId)     {
+
+
+        // car 테이블에서 carId의 Data 조회 -> car
+        Optional<Reservation> res = reservationRepository.findById(rsvId);
+        Reservation reservation = res.get();
+
+        // car 값 수정
+        reservation.setStatus(status); // status 수정 
+        reservation.setPayId(payId); // payId 수정
+
+        System.out.println("Edited status     : " + reservation.getStatus());
+        System.out.println("Edited payId     : " + reservation.getPayId());
+
+        /////////////
+        // DB Update
+        /////////////
+        reservationRepository.save(reservation);
+
+    }
 
 }
 

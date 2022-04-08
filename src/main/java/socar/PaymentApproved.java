@@ -8,6 +8,10 @@ public class PaymentApproved extends AbstractEvent {
     private Long carId;
     private String status;
 
+    public PaymentApproved(){
+        super();
+    }
+
     public Long getPayId() {
         return payId;
     }
