@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name="car", url="http://user06-car:8080")
 public interface CarService {
-    @RequestMapping(path="/chkAndReqReserve")
+    @RequestMapping(method= RequestMethod.GET, path="/chkAndReqReserve")
     public boolean chkAndReqReserve(@RequestParam("carId") long carId);
 
 }
