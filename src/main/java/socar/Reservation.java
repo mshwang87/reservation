@@ -12,21 +12,18 @@ public class Reservation  {
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long rsvId;
-
     private Long carId;
-
-    private String status;
-
-    private Long payId;
+    private String status; // VALUE = reqReserve, reserved, reqCancel, cancelled
+    private Long payId; // 결제 ID : 결재 완료시 Update, 결제 취소하는 경우 사용
 
 
     @PostPersist
     public void onPostPersist(){
+
         // 예약 요청이 들어왔을 경우 사용가능한지 확인
-        socar.external.Car car = new socar.external.Car();
         // mappings goes here
         boolean result = ReservationApplication.applicationContext.getBean(socar.external.CarService.class)
-            .chkAndReqReserve(car);
+            .chkAndReqReserve(this.getCarId());
         System.out.println("사용가능 여부 : " + result);
 
         if(result) { 
@@ -51,21 +48,21 @@ public class Reservation  {
     public void onPostUpdate(){
 
         // 예약 취소 요청일 경우 
-        if(this.getStatus().equals("reservationCancelRequested")) {
+        if(this.getStatus().equals("reqCancel")) {
             ReservationCancelRequested reservationCancelRequested = new ReservationCancelRequested();
             BeanUtils.copyProperties(this, reservationCancelRequested);
             reservationCancelRequested.publishAfterCommit();
         }
 
         // 예약 확정일 경우 
-        if(this.getStatus().equals("reservationConfirmed")) {
+        if(this.getStatus().equals("reserved")) {
             ReservationConfirmed reservationConfirmed = new ReservationConfirmed();
             BeanUtils.copyProperties(this, reservationConfirmed);
             reservationConfirmed.publishAfterCommit();
         }
 
         // 예약 취소일 경우 
-        if(this.getStatus().equals("reservationCancelled")) {
+        if(this.getStatus().equals("cancelled")) {
             ReservationCancelled reservationCancelled = new ReservationCancelled();
             BeanUtils.copyProperties(this, reservationCancelled);
             reservationCancelled.publishAfterCommit();
